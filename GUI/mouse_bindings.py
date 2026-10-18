@@ -46,7 +46,7 @@ class MouseBindingsPage(ft.Container):
             icon=ft.Icons.ADS_CLICK,
             content=ft.Column([
                 ft.Text("Choose ONE method. The other will be disabled automatically.", color=ft.Colors.BLACK_54),
-                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
+                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 self.method_selector
             ])
         )
@@ -58,13 +58,14 @@ class MouseBindingsPage(ft.Container):
             size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK_87
         )
 
+        # Dwell Level Buttons (1-20) for adjusting dwell time
         self.level_buttons = []
         level_controls = []
-        for lvl in range(1, 18):
+        for lvl in range(1, 21):
             is_active = (lvl == initial_level)
             btn = ft.Button(
                 content=ft.Text(str(lvl), text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.W_500, size=13),
-                width=38, height=36,
+                width=50, height=50,
                 style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=8)),
                 bgcolor=ft.Colors.ORANGE_50 if is_active else ft.Colors.WHITE,
                 color=ft.Colors.ORANGE_900 if is_active else ft.Colors.BLACK_87,
@@ -80,10 +81,10 @@ class MouseBindingsPage(ft.Container):
             icon=ft.Icons.TIMER,
             content=ft.Column([
                 self.dwell_time_label,
-                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
+                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 levels_row,
-                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
-                ft.Text("1 = Fastest (0.15 s) | 17 = Slowest (2.55 s)", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_800),
+                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                ft.Text("1 = Fastest (0.15 s) | 20 = Slowest (3.00 s)", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_800),
             ])
         )
 
@@ -131,7 +132,7 @@ class MouseBindingsPage(ft.Container):
 
     def get_current_level(self):
         if not self.dwell_clicker: return 10
-        return max(1, min(17, int(round(self.dwell_clicker.dwell_time / 0.15))))
+        return max(1, min(20, int(round(self.dwell_clicker.dwell_time / 0.15))))
 
     def set_dwell_level(self, level):
         if self.dwell_clicker:

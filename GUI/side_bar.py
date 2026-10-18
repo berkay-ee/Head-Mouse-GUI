@@ -36,4 +36,5 @@ class Sidebar(ft.Container):
             self.nav_item("Mouse Bindings", ft.Icons.MOUSE, "Mouse Bindings"),
             self.nav_item("Apps", ft.Icons.GRID_VIEW, "Apps"),
             self.nav_item("Face Gesture", ft.Icons.FACE, "Face Gesture"),
+            self.nav_item("Templates", ft.Icons.PALETTE, "Templates"),
         ], spacing=5)

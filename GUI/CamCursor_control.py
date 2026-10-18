@@ -78,17 +78,17 @@ class CursorControlPage(ft.Container):
                     text_sens_x,
                     create_level_buttons(set_sens_x), # Horizontal Sensitivity Buttons (1-20)
                     
-                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
                     
                     text_sens_y,
                     create_level_buttons(set_sens_y), # Vertical Sensitivity Buttons (1-20)
                 ]),
-                padding=20, bgcolor=ft.Colors.WHITE, border_radius=10,
+                padding=25, bgcolor=ft.Colors.WHITE, border_radius=10,
                 border=ft.Border(left=ft.BorderSide(4, ft.Colors.BLUE)),
                 shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK_12)
             ),
             
-            ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+            ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
             
             # stability and filtering
             ft.Container(
