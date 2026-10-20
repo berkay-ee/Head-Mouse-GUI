@@ -28,7 +28,7 @@ class SensePilotApp:
         self.dwell_clicker = DwellClicker()
 
         # 1. Mouse bindings
-        self.mouse_bindings_page = MouseBindingsPage(dwell_clicker=self.dwell_clicker)
+        self.mouse_bindings_page = MouseBindingsPage(dwell_clicker=self.dwell_clicker, current_theme=self.current_theme)
 
         # 2. Camera page
         self.camera_page = CameraPage(self.page, mouse_bindings_page=self.mouse_bindings_page)
@@ -63,14 +63,15 @@ class SensePilotApp:
         )
 
         # --- Sol Menü (Sidebar) ---
-        self.sidebar = Sidebar(on_menu_click=self.change_page)
+        self.sidebar = Sidebar(on_menu_click=self.change_page, current_theme=self.current_theme)
 
-        self.page.add(
-            ft.Row([
-                self.sidebar,
-                self.content_area
-            ], expand=True, spacing=0)
-        )
+        # ANA YAPIYI DEĞİŞTİREBİLMEK İÇİN BİR DEĞİŞKENE ATIYORUZ
+        self.main_layout = ft.Row([
+            self.sidebar,
+            self.content_area
+        ], expand=True, spacing=0)
+        
+        self.page.add(self.main_layout)
 
     def setup_page(self):
         self.page.title = "PixelPilot - Head Mouse Control"
@@ -87,7 +88,16 @@ class SensePilotApp:
         self.page.bgcolor = theme_dict["bg"]
         self.content_area.bgcolor = theme_dict["bg"]
         
+        # Sidebar with the new theme
+        self.sidebar = Sidebar(on_menu_click=self.change_page, current_theme=self.current_theme)
+        # Ana layout'un sol menüsünü güncelle
+        self.main_layout.controls[0] = self.sidebar
+
+        if hasattr(self, 'desktop_page'):
+            self.desktop_page.apply_theme(theme_dict)
         # Şablon sayfasındaki kart sınırlarını tazelemek için içeriği yeniden yükle
+        if hasattr(self, 'mouse_bindings_page'):
+            self.mouse_bindings_page.apply_theme(theme_dict)
         self.template_page = TemplatePage(
             on_theme_select=self.apply_theme,
             on_preset_select=self.apply_preset,
@@ -100,7 +110,6 @@ class SensePilotApp:
 
     def apply_preset(self, preset_dict: dict):
         """Kullanıcı bir imleç hassasiyet şablonu seçtiğinde çalışır."""
-        # Eğer mouse_controller üzerinde hız/yumuşatma ayarı varsa doğrudan güncelleyebilirsiniz:
         if hasattr(self.camera_page, 'mouse_controller') and self.camera_page.mouse_controller is not None:
             if hasattr(self.camera_page.mouse_controller, 'speed'):
                 self.camera_page.mouse_controller.speed = preset_dict.get("speed", 5)
@@ -118,43 +127,32 @@ class SensePilotApp:
                 self.camera_page.stop_camera()
 
     def change_page(self, route):
-        # Stop BLE connection if we are leaving the Desktop page
         if route != "Desktop":
             if hasattr(self, 'desktop_page') and self.desktop_page is not None:
                 self.desktop_page.stop_ble()
 
-        # Sayfa rotaları
         if route == "Desktop":
             if hasattr(self, 'desktop_page'):
                 self.desktop_page.update_dashboard()
             self.content_area.content = self.desktop_page
-
         elif route in ["PixelPilot", "PixelPilot "]: 
             self.content_area.content = ft.Text("Mouse setting loading", size=20)
-
         elif route == "Camera":
             self.content_area.content = self.camera_page
-
         elif route in ["CursorControl", "Cursor Control"]:
             self.content_area.content = self.cursor_control_page
-
         elif route in ["MouseBindings", "Mouse Bindings"]:
             if hasattr(self, 'camera_page') and hasattr(self.camera_page, 'executor'):
                 current_mode = self.camera_page.executor.get_current_mode_name()
                 if hasattr(self, 'mouse_bindings_page'):
                     self.mouse_bindings_page.update_active_mode_text(current_mode)
             self.content_area.content = self.mouse_bindings_page
-
         elif route in ["Apps", "Apps Page"]: 
             self.content_area.content = self.apps_page
-
         elif route in ["FaceGesture", "Face Gesture"]:
             self.content_area.content = self.gesture_determine_page
-
-        # --- Şablonlar / Ayarlar Sayfası Rotası ---
         elif route in ["Templates", "Templates ", "Template", "Şablonlar", "Settings"]:
             self.content_area.content = self.template_page
-
         else:
             self.content_area.content = ft.Text(f"{route} Ekranı", size=20)
 

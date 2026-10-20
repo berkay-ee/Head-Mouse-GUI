@@ -1,34 +1,27 @@
 import flet as ft
 
 class MouseBindingsPage(ft.Container):
-    def __init__(self, dwell_clicker):
+    def __init__(self, dwell_clicker, current_theme=None):
         super().__init__()
         self.dwell_clicker = dwell_clicker
         self.expand = True
         self.padding = 30
         self.bgcolor = ft.Colors.TRANSPARENT
 
+        # Eğer main.py'den tema gelmezse güvenlik yedeği
+        self.current_theme = current_theme if current_theme else {
+            "bg": "#F8FAFC", "surface": "#FFFFFF", "primary": "#2563EB", 
+            "text": "#0F172A", "text_secondary": "#64748B", "border": "#E2E8F0"
+        }
+
         # STATE
         self.active_click_method = "dwell"
         if self.dwell_clicker:
             self.dwell_clicker.enabled = True
 
-        header = ft.Text("Mouse & Gesture Settings", size=28, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK_87)
-
-        # Active Mode Display
-        self.mode_display = ft.Text("Current Action: Left Click", size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_700)
+        # Durumu (State) korunan ve değerleri güncellenen bileşenler (Sadece 1 kez yaratılır)
+        self.mode_display = ft.Text("Current Action: Left Click", size=22, weight=ft.FontWeight.BOLD)
         
-        mode_card = self.create_card(
-            title="Action Cycler (Open Mouth)",
-            icon=ft.Icons.SYNC,
-            content=ft.Column([
-                ft.Text("Opening your mouth cycles through Left Click, Right Click, Double Click, and Scroll Mode.", color=ft.Colors.BLACK_54),
-                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
-                self.mode_display
-            ])
-        )
-
-        # Click Method Selector (Now includes "None")
         self.method_selector = ft.RadioGroup(
             content=ft.Row([
                 ft.Radio(value="dwell", label="Use Dwell Click (Hover to click)"),
@@ -41,34 +34,77 @@ class MouseBindingsPage(ft.Container):
             on_change=self.toggle_click_method
         )
 
+        self.dwell_time_label = ft.Text("", size=14, weight=ft.FontWeight.BOLD)
+        self.level_buttons = []
+
+        # İlk arayüz çizimi
+        self.build_ui()
+
+    def apply_theme(self, new_theme):
+        """Tema değiştiğinde main.py tarafından tetiklenir."""
+        self.current_theme = new_theme
+        self.build_ui()
+        
+        # if page is not None, update the page to reflect the new theme
+        try:
+            self.update()
+        except Exception:
+            pass
+
+    def build_ui(self):
+        """Arayüzü aktif temanın renkleriyle sıfırdan inşa eder."""
+        theme = self.current_theme
+
+        header = ft.Text("Mouse & Gesture Settings", size=28, weight=ft.FontWeight.BOLD, color=theme["text"])
+
+        self.mode_display.color = theme["primary"]
+
+        mode_card = self.create_card(
+            title="Action Cycler (Open Mouth)",
+            icon=ft.Icons.SYNC,
+            content=ft.Column([
+                ft.Text("Opening your mouth cycles through Left Click, Right Click, Double Click, and Scroll Mode.", color=theme["text_secondary"]),
+                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
+                self.mode_display
+            ])
+        )
+
         method_card = self.create_card(
             title="Click Execution Method",
             icon=ft.Icons.ADS_CLICK,
             content=ft.Column([
-                ft.Text("Choose ONE method. The other will be disabled automatically.", color=ft.Colors.BLACK_54),
+                ft.Text("Choose ONE method. The other will be disabled automatically.", color=theme["text_secondary"]),
                 ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 self.method_selector
             ])
         )
 
-        # Dwell Settings
-        initial_level = self.get_current_level()
-        self.dwell_time_label = ft.Text(
-            f"Dwell Time: Current Value ({self.dwell_clicker.dwell_time:.2f} Seconds)" if self.dwell_clicker else "Dwell Time: Current Value (1.50 Seconds)", 
-            size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK_87
-        )
+        # Dwell Settings Label Update
+        if self.dwell_clicker:
+            self.dwell_time_label.value = f"Dwell Time: Current Value ({self.dwell_clicker.dwell_time:.2f} Seconds)"
+        else:
+            self.dwell_time_label.value = "Dwell Time: Current Value (1.50 Seconds)"
+        
+        self.dwell_time_label.color = theme["text"]
 
-        # Dwell Level Buttons (1-20) for adjusting dwell time
-        self.level_buttons = []
+        initial_level = self.get_current_level()
+        self.level_buttons.clear()
         level_controls = []
+
         for lvl in range(1, 21):
             is_active = (lvl == initial_level)
+            
+            # Seçili butonun arka planı temanın ana rengi, yazısı beyaz olur.
+            # Seçili olmayanlar temanın arka plan rengini alır.
+            btn_bgcolor = theme["primary"] if is_active else theme["bg"]
+            btn_color = ft.Colors.WHITE if is_active else theme["text"]
+
             btn = ft.Button(
                 content=ft.Text(str(lvl), text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.W_500, size=13),
                 width=50, height=50,
                 style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=8)),
-                bgcolor=ft.Colors.ORANGE_50 if is_active else ft.Colors.WHITE,
-                color=ft.Colors.ORANGE_900 if is_active else ft.Colors.BLACK_87,
+                bgcolor=btn_bgcolor,
+                color=btn_color,
                 on_click=lambda e, l=lvl: self.set_dwell_level(l)
             )
             self.level_buttons.append((lvl, btn))
@@ -84,7 +120,7 @@ class MouseBindingsPage(ft.Container):
                 ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 levels_row,
                 ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
-                ft.Text("1 = Fastest (0.15 s) | 20 = Slowest (3.00 s)", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_800),
+                ft.Text("1 = Fastest (0.15 s) | 20 = Slowest (3.00 s)", size=12, weight=ft.FontWeight.BOLD, color=theme["primary"]),
             ])
         )
 
@@ -99,16 +135,17 @@ class MouseBindingsPage(ft.Container):
         ], horizontal_alignment=ft.CrossAxisAlignment.START, scroll=ft.ScrollMode.AUTO)
 
     def create_card(self, title, icon, content):
+        theme = self.current_theme
         return ft.Container(
             content=ft.Column([
-                ft.Row([ft.Icon(icon, color=ft.Colors.BLUE_600), ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK_87)]),
+                ft.Row([ft.Icon(icon, color=theme["primary"]), ft.Text(title, size=18, weight=ft.FontWeight.BOLD, color=theme["text"])]),
                 ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                 content
             ]),
-            padding=24, bgcolor=ft.Colors.WHITE, border_radius=12,
+            padding=24, bgcolor=theme["surface"], border_radius=12,
             border=ft.Border(
-                top=ft.BorderSide(1, ft.Colors.BLACK_12), right=ft.BorderSide(1, ft.Colors.BLACK_12),
-                bottom=ft.BorderSide(1, ft.Colors.BLACK_12), left=ft.BorderSide(1, ft.Colors.BLACK_12)
+                top=ft.BorderSide(1, theme["border"]), right=ft.BorderSide(1, theme["border"]),
+                bottom=ft.BorderSide(1, theme["border"]), left=ft.BorderSide(1, theme["border"])
             ),
             shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.BLACK_12)
         )
@@ -122,8 +159,6 @@ class MouseBindingsPage(ft.Container):
     def update_active_mode_text(self, mode_name):
         """Safely updates the text display to exactly match the active mode."""
         self.mode_display.value = f"Current Action: {mode_name}"
-        
-        # Blindly try to update visuals. If Flet complains it's not on screen yet, ignore it!
         try:
             self.mode_display.update()
             self.update() 
@@ -135,11 +170,15 @@ class MouseBindingsPage(ft.Container):
         return max(1, min(20, int(round(self.dwell_clicker.dwell_time / 0.15))))
 
     def set_dwell_level(self, level):
+        theme = self.current_theme
         if self.dwell_clicker:
             self.dwell_clicker.dwell_time = level * 0.15
             self.dwell_time_label.value = f"Dwell Time: Current Value ({self.dwell_clicker.dwell_time:.2f} Seconds)"
+            
+            # Tıklanan butonun rengini temanın ana rengine dönüştür
             for lvl, btn in self.level_buttons:
-                btn.bgcolor = ft.Colors.ORANGE_50 if lvl == level else ft.Colors.WHITE
-                btn.color = ft.Colors.ORANGE_900 if lvl == level else ft.Colors.BLACK_87
+                btn.bgcolor = theme["primary"] if lvl == level else theme["bg"]
+                btn.color = ft.Colors.WHITE if lvl == level else theme["text"]
                 btn.update()
+                
             self.dwell_time_label.update()
