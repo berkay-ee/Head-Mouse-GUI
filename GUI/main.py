@@ -31,13 +31,21 @@ class SensePilotApp:
         self.mouse_bindings_page = MouseBindingsPage(dwell_clicker=self.dwell_clicker, current_theme=self.current_theme)
 
         # 2. Camera page
-        self.camera_page = CameraPage(self.page, mouse_bindings_page=self.mouse_bindings_page)
+        # 2. Camera page
+        self.camera_page = CameraPage(
+            self.page, 
+            mouse_bindings_page=self.mouse_bindings_page, 
+            current_theme=self.current_theme
+        )
 
         # 3. Gesture page
-        self.gesture_determine_page = GestureDeterminePage(mouse_controller=self.camera_page.mouse_controller)
+        self.gesture_determine_page = GestureDeterminePage(
+            mouse_controller=self.camera_page.mouse_controller, 
+            current_theme=self.current_theme
+        )
 
         # 4. Apps & Desktop pages
-        self.apps_page = AppsPage(page)
+        self.apps_page = AppsPage(page, current_theme=self.current_theme)
         self.desktop_page = DesktopPage(
             mouse_controller=self.camera_page.mouse_controller,
             dwell_clicker=self.dwell_clicker,
@@ -45,7 +53,10 @@ class SensePilotApp:
         )
 
         # 5. Cursor Control page
-        self.cursor_control_page = CursorControlPage(mouse_controller=self.camera_page.mouse_controller)
+        self.cursor_control_page = CursorControlPage(
+            mouse_controller=self.camera_page.mouse_controller, 
+            current_theme=self.current_theme
+        )
 
         # 6. Template & Palet Sayfası
         self.template_page = TemplatePage(
@@ -98,6 +109,22 @@ class SensePilotApp:
         # Şablon sayfasındaki kart sınırlarını tazelemek için içeriği yeniden yükle
         if hasattr(self, 'mouse_bindings_page'):
             self.mouse_bindings_page.apply_theme(theme_dict)
+        # cursor control page template card border update
+        if hasattr(self, 'cursor_control_page'):
+            self.cursor_control_page.apply_theme(theme_dict)
+
+        # camera page theme update
+        if hasattr(self, 'camera_page'):
+            self.camera_page.apply_theme(theme_dict)    
+
+        # gesture page theme update
+        if hasattr(self, 'gesture_determine_page'):
+            self.gesture_determine_page.apply_theme(theme_dict)
+
+        # apps page theme update
+        if hasattr(self, 'apps_page'):
+            self.apps_page.apply_theme(theme_dict)
+        
         self.template_page = TemplatePage(
             on_theme_select=self.apply_theme,
             on_preset_select=self.apply_preset,

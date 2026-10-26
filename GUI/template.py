@@ -2,7 +2,6 @@ import flet as ft
 from typing import Callable, Optional
 
 # =============================================================================
-# 0. SÜRÜMDEN BAĞIMSIZ GÜVENLİ BİLEŞENLER
 # =============================================================================
 def create_border(width: int = 1, color: str = "#CCCCCC"):
     try:
@@ -37,7 +36,7 @@ def build_outlined_button(text: str, icon: str, fg_color: str):
     )
 
 # =============================================================================
-# 1. RENK PALETLERİ
+# 1. RENK PALETLERİ (WCAG AAA & Cognitive Accessibility Standards)
 # =============================================================================
 COLOR_TEMPLATES = {
     "light": {
@@ -88,20 +87,55 @@ COLOR_TEMPLATES = {
         "border": "#444C56",
         "theme_mode": ft.ThemeMode.DARK,
     },
-    "colorblind": {
-        "id": "colorblind",
-        "name": "Color Blind Mode",
-        "description": "Red colorblind-friendly palette with high contrast.",
-        "bg": "#000000",
-        "surface": "#1A1A1A",
-        "primary": "#FFC107",
-        "text": "#FFFFFF",
-        "text_secondary": "#64B5F6",
-        "border": "#FFFFFF",
+    "low_vision": {
+        "id": "low_vision",
+        "name": "Low Vision (High Contrast)",
+        "description": "Pure yellow on solid black. The accessibility gold standard for severe visual impairment. Maximum visibility, zero glare.",
+        "bg": "#000000",          # Pure Black Background
+        "surface": "#000000",     # Pure Black Cards
+        "primary": "#0C14FF",     # Pure Yellow Accents/Buttons
+        "text": "#FFFF00",        # Pure Yellow Text
+        "text_secondary": "#FFCC00", # Amber/Darker Yellow for secondary info
+        "border": "#FFFF00",      # Pure Yellow Borders
         "theme_mode": ft.ThemeMode.DARK,
     },
+    "light_scatter": {
+        "id": "light_scatter",
+        "name": "Light Scatter (Dark AAA)",
+        "description": "Prevents screen from acting like a flashlight for photophobia. Muted white text stops visual bleeding.",
+        "bg": "#121212",
+        "surface": "#1C1C1C",
+        "primary": "#66B2FF",
+        "text": "#E0E0E0",
+        "text_secondary": "#9E9E9E",
+        "border": "#424242",
+        "theme_mode": ft.ThemeMode.DARK,
+    },
+    "okabe_ito": {
+        "id": "okabe_ito",
+        "name": "Colorblind (Okabe-Ito)",
+        "description": "Universally safe Okabe-Ito palette. Uses distinct shifted hues (Sky Blue, Orange) for extreme clarity.",
+        "bg": "#F0F0F0",
+        "surface": "#FFFFFF",
+        "primary": "#0072B2",
+        "text": "#121212",
+        "text_secondary": "#0072B2",
+        "border": "#E69F00",
+        "theme_mode": ft.ThemeMode.LIGHT,
+    },
+    "soft_contrast": {
+        "id": "soft_contrast",
+        "name": "Soft Contrast (Cognitive)",
+        "description": "Lowers contrast ratio to prevent text vibration for perceptual processing disorders. Uses warm, soft creams.",
+        "bg": "#FDF8F5",
+        "surface": "#F0F4F8",
+        "primary": "#3182CE",
+        "text": "#2D3748",
+        "text_secondary": "#4A5568",
+        "border": "#CBD5E0",
+        "theme_mode": ft.ThemeMode.LIGHT,
+    },
 }
-
 # =============================================================================
 # 2. BAŞ FARE KULLANIM ŞABLONLARI
 # =============================================================================
@@ -148,12 +182,12 @@ class TemplatePage(ft.Container):
             expand=True,
             spacing=20,
             controls=[
-                ft.Text("Color Templates", size=24, weight=ft.FontWeight.BOLD),
-                ft.Text("Choose the color theme that best fits your workspace and visual sensitivity:", size=14),
+                ft.Text("Color Templates", size=24, weight=ft.FontWeight.BOLD, color=self.current_theme["text"]),
+                ft.Text("Choose the color theme that best fits your workspace and visual sensitivity:", size=14, color=self.current_theme["text_secondary"]),
                 self._build_theme_cards(),
                 ft.Divider(height=30, color="transparent"),
-                ft.Text("Primary Mouse Sensitivity Profiles", size=24, weight=ft.FontWeight.BOLD),
-                ft.Text("Pre-designed cursor and filtering templates for different scenarios:", size=14),
+                ft.Text("Primary Mouse Sensitivity Profiles", size=24, weight=ft.FontWeight.BOLD, color=self.current_theme["text"]),
+                ft.Text("Pre-designed cursor and filtering templates for different scenarios:", size=14, color=self.current_theme["text_secondary"]),
                 self._build_preset_cards(),
             ],
         )
@@ -191,7 +225,6 @@ class TemplatePage(ft.Container):
                     [
                         ft.Row(
                             [
-                                # Flet'i çökerten Icon kaldırıldı, yerine seçimi belirten Radio Button (yuvarlak) eklendi
                                 ft.Container(
                                     width=18, height=18, border_radius=9,
                                     bgcolor=t["primary"] if is_active else "transparent",
@@ -248,13 +281,16 @@ class TemplatePage(ft.Container):
     def _handle_theme_change(self, theme_key: str):
         self.current_theme = COLOR_TEMPLATES[theme_key]
         
-        # SİHİRLİ DOKUNUŞ: Tıklandığında kartları kendi içimizde güvenle baştan oluşturuyoruz. 
-        # Bu Flet'in çökmesini %100 engeller.
         self.content.controls[2] = self._build_theme_cards()
         self.content.controls[6] = self._build_preset_cards()
+        
+        self.content.controls[0].color = self.current_theme["text"]
+        self.content.controls[1].color = self.current_theme["text_secondary"]
+        self.content.controls[4].color = self.current_theme["text"]
+        self.content.controls[5].color = self.current_theme["text_secondary"]
+        
         self.update()
 
-        # Sonra ana sisteme bildiriyoruz
         if self.on_theme_select:
             self.on_theme_select(self.current_theme)
 
