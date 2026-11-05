@@ -248,7 +248,7 @@ class GestureMouseController:
         self.app_switch_cooldown = 1  
         self.switch_threshold = 15.0     
 
-        # NOTE: OneEuroFilter is DELETED. We now use native GUI smoothing below.
+       
 
     def process_frame(self, frame):
         try:
@@ -264,25 +264,61 @@ class GestureMouseController:
                     
                     anchor_x = (left_eye.x + right_eye.x) / 2.0
                     anchor_y = (left_eye.y + right_eye.y) / 2.0
+
+                    # Calculate the distance between the eyes to estimate face width
+                    face_width = abs(right_eye.x - left_eye.x)
+
+                    if face_width < 0.01:
+                        face_width = 0.01
                     
                     # 100.0 Scale mapping. Directly aligns with GUI inputs!
-                    raw_yaw_offset = (nose.x - anchor_x) * 100.0
-                    raw_pitch_offset = (nose.y - anchor_y) * 100.0
+                    raw_yaw_offset = ((nose.x - anchor_x) / face_width) * 10.0
+                    raw_pitch_offset = ((nose.y - anchor_y) / face_width) * 10.0
 
+                    # ==========================================
+                    # 1. 5 SECONDS CALIBRATION COUNTDOWN (Freezes Mouse)
+                    # ==========================================
+                    if getattr(self, 'is_calibrating', False):
+                        elapsed_time = time.time() - self.calibration_start_time
+                        remaining_time = 5 - int(elapsed_time)
+
+                        if remaining_time > 0:
+                            # Draw the countdown on the screen
+                            cv2.putText(frame, f"CALIBRATING IN: {remaining_time}", (50, 150), 
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 4)
+                            cv2.putText(frame, "Look straight at the center of your screen!", (50, 200), 
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+                            
+                            # Skip the rest of the loop so the mouse freezes during countdown
+                            return frame 
+                        else:
+                            # Countdown hit 0! Trigger the baseline reset.
+                            self.is_calibrating = False
+                            self.calibrated = False 
+
+                    # ==========================================
+                    # 2. CALIBRATION / BASELINE RESET
+                    # ==========================================
                     if not self.calibrated:
                         self.baseline_yaw = raw_yaw_offset
                         self.baseline_pitch = raw_pitch_offset
                         self.calibrated = True
                         print("[CAM] System Calibrated! Head center is set to Screen Center.")
-                        pyautogui.moveTo(self.center_x, self.center_y)
+                        try:
+                            pyautogui.moveTo(self.center_x, self.center_y)
+                        except Exception:
+                            pass
+                        cv2.putText(frame, "CALIBRATION COMPLETE!", (50, 150), 
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 4)
 
+                    # --- Continue with normal calculations ---
                     yaw = raw_yaw_offset - self.baseline_yaw
                     pitch = raw_pitch_offset - self.baseline_pitch
                     
                     pose_text = f"Pitch:{pitch:.1f} Yaw:{yaw:.1f}"
                     cv2.putText(frame, pose_text, (20, max(20, 30)), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
-                
+            
                     # App Switcher Mode
                     if getattr(self, 'is_app_switching', False):
                         current_time = time.time()
@@ -319,10 +355,7 @@ class GestureMouseController:
 
                     self.map_head_to_mouse(yaw, pitch)
                     break 
-                        # LIVE DEBUGGER: Proves your GUI sliders are talking to the script
-                    debug_text = f"DZ:{float(self.deadzone_yaw):.2f} | Sens:{float(self.sensitivity_x):.1f} | Smooth:{float(self.smoothing_factor):.2f}"
-                    cv2.putText(frame, debug_text, (20, max(20, 30)), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
         except Exception as e:
             print(f"[ERR] Tracking error: {e}")
             
@@ -374,3 +407,9 @@ class GestureMouseController:
                 pyautogui.moveTo(int(self.current_x), int(self.current_y), duration=0)
             except Exception:
                 pass
+
+    def trigger_calibration(self):
+        import time
+        self.is_calibrating = True
+        self.calibration_start_time = time.time()
+        print("[CAM] Calibration countdown started...")

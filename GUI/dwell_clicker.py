@@ -34,7 +34,7 @@ class DwellClicker:
             print(f"[DwellClicker] Clickthrough setup error: {e}")
 
     def _run_overlay(self):
-        # Fix Windows DPI scaling so the circle aligns perfectly with pyautogui coordinates
+        # Set the process to be DPI aware to prevent scaling issues on high-DPI displays
         try:
             ctypes.windll.user32.SetProcessDPIAware()
         except:

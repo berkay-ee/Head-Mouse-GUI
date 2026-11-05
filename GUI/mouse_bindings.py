@@ -19,7 +19,7 @@ class MouseBindingsPage(ft.Container):
         if self.dwell_clicker:
             self.dwell_clicker.enabled = True
 
-        # Durumu (State) korunan ve değerleri güncellenen bileşenler (Sadece 1 kez yaratılır)
+        # UI ELEMENTS
         self.mode_display = ft.Text("Current Action: Left Click", size=22, weight=ft.FontWeight.BOLD)
         
         self.method_selector = ft.RadioGroup(
@@ -41,7 +41,7 @@ class MouseBindingsPage(ft.Container):
         self.build_ui()
 
     def apply_theme(self, new_theme):
-        """Tema değiştiğinde main.py tarafından tetiklenir."""
+        """ Changes the current theme and rebuilds the UI to reflect the new theme. """
         self.current_theme = new_theme
         self.build_ui()
         
@@ -94,35 +94,56 @@ class MouseBindingsPage(ft.Container):
         for lvl in range(1, 21):
             is_active = (lvl == initial_level)
             
-            # Seçili butonun arka planı temanın ana rengi, yazısı beyaz olur.
-            # Seçili olmayanlar temanın arka plan rengini alır.
-            btn_bgcolor = theme["primary"] if is_active else theme["bg"]
+            # If the button is active, use the primary color; otherwise, use the surface color for background.
+
+            btn_bgcolor = theme["primary"] if is_active else theme["surface"]
             btn_color = ft.Colors.WHITE if is_active else theme["text"]
 
-            btn = ft.Button(
-                content=ft.Text(str(lvl), text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.W_500, size=13),
-                width=50, height=50,
-                style=ft.ButtonStyle(padding=0, shape=ft.RoundedRectangleBorder(radius=8)),
-                bgcolor=btn_bgcolor,
-                color=btn_color,
-                on_click=lambda e, l=lvl: self.set_dwell_level(l)
+            btn = ft.Container(
+                content=ft.Text(
+                    str(lvl), 
+                    size=13, 
+                    weight=ft.FontWeight.W_500, 
+                    color=ft.Colors.WHITE if is_active else theme["text"]
+                ),
+                alignment=ft.Alignment(0, 0),
+                width=50, 
+                height=50,
+                border_radius=8,
+                ink=True,  # Keeps the button click ripple effect
+                data=lvl,
+                on_click=lambda e, l=lvl: self.set_dwell_level(l),
+                bgcolor=theme["primary"] if is_active else theme["surface"],
+                border=ft.Border(
+                    top=ft.BorderSide(2 if is_active else 1, theme["primary"] if is_active else theme["border"]),
+                    bottom=ft.BorderSide(2 if is_active else 1, theme["primary"] if is_active else theme["border"]),
+                    left=ft.BorderSide(2 if is_active else 1, theme["primary"] if is_active else theme["border"]),
+                    right=ft.BorderSide(2 if is_active else 1, theme["primary"] if is_active else theme["border"])
+                )
             )
             self.level_buttons.append((lvl, btn))
             level_controls.append(btn)
 
-        levels_row = ft.Row(level_controls, spacing=5, scroll=ft.ScrollMode.AUTO)
+        levels_row = ft.Row(level_controls, spacing=5, run_spacing=10, wrap=True)
 
         dwell_card = self.create_card(
-            title="Dwell Click Speed",
+            title="Dwell Click Speed (Seconds)",
             icon=ft.Icons.TIMER,
-            content=ft.Column([
-                self.dwell_time_label,
-                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
-                levels_row,
-                ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
-                ft.Text("1 = Fastest (0.15 s) | 20 = Slowest (3.00 s)", size=12, weight=ft.FontWeight.BOLD, color=theme["primary"]),
-            ])
+            content=ft.Container(
+                content=ft.Column([
+                    self.dwell_time_label,
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                    levels_row,
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
+                    ft.Text("1 = Fastest (0.15 s) | 20 = Slowest (3.00 s)", size=12, weight=ft.FontWeight.BOLD, color=theme["primary"]),
+                ]),
+                padding=25, bgcolor=theme["surface"], border_radius=10,
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK_12)
+
+            )
         )
+
+        
 
         self.content = ft.Column([
             header,
@@ -177,7 +198,7 @@ class MouseBindingsPage(ft.Container):
             
             # Tıklanan butonun rengini temanın ana rengine dönüştür
             for lvl, btn in self.level_buttons:
-                btn.bgcolor = theme["primary"] if lvl == level else theme["bg"]
+                btn.bgcolor = theme["primary"] if lvl == level else theme["surface"]
                 btn.color = ft.Colors.WHITE if lvl == level else theme["text"]
                 btn.update()
                 

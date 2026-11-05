@@ -72,7 +72,7 @@ class GestureDeterminePage(ft.Container):
             pass
 
     def build_ui(self):
-        """Arayüzü aktif temanın renkleriyle sıfırdan inşa eder."""
+        """ Builds the UI from scratch using the current theme. """
         theme = self.current_theme
         
         # Grafik renklerini güncelle
@@ -124,7 +124,7 @@ class GestureDeterminePage(ft.Container):
             yaw_controls.append(btn)
         yaw_row = ft.Row(yaw_controls, spacing=5, scroll=ft.ScrollMode.AUTO)
 
-        # Sayfa Düzeni
+        # Page Content
         self.content = ft.Column([
             ft.Text("Head Movement Thresholds", size=28, weight=ft.FontWeight.BOLD, color=theme["text"]),
             ft.Text("Select a threshold value (1-17). When the blue dot (your head) passes the red line, the event triggers.", color=theme["text_secondary"]),
@@ -200,7 +200,9 @@ class GestureDeterminePage(ft.Container):
             self.pitch_bar.update()
         except: pass
 
+    # =========================================
     # --- BUTTON LOGIC FOR YAW ---
+    # =========================================
     def set_yaw(self, level):
         theme = self.current_theme
         self.yaw_threshold_val = float(level)
@@ -221,7 +223,9 @@ class GestureDeterminePage(ft.Container):
             self.yaw_bar.update()
         except: pass
 
-    # --- CANLI VERİ (LIVE DATA) ---
+    # =========================================
+    #  LIVE DATA UPDATE
+    # =========================================
     def update_live_data(self, pitch, yaw):
         if not self.page: return 
 
